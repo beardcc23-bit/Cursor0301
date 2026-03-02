@@ -113,7 +113,7 @@
         gap: 16px;
       }
 
-      @media (max-width: 900px) {
+      @media (max-width: 1100px) {
         .grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -261,7 +261,7 @@
       <header class="header">
         <div class="title-block">
           <h1>台股／期貨監控</h1>
-          <p>台股大盤、台指期（全）、新加坡富台指三檔即時監控（前端示意）</p>
+          <p>台股大盤、台指期（全）、美股期貨與 ETF 追蹤</p>
         </div>
         <div class="controls">
           <span class="badge">
@@ -344,14 +344,14 @@
           </div>
         </section>
 
-        <section class="card" data-symbol="SXF">
+        <section class="card" data-symbol="US_NQ">
           <div class="card-inner">
             <div class="card-header">
               <div>
-                <div class="symbol">SXF</div>
-                <div class="name">新加坡富台指</div>
+                <div class="symbol">MNQ</div>
+                <div class="name">小那斯達克期貨</div>
               </div>
-              <span class="tag">SGX 期貨</span>
+              <span class="tag">CME Micro NQ</span>
             </div>
             <div class="price-row">
               <span class="price" data-field="price">-</span>
@@ -361,6 +361,68 @@
               <div>
                 <span class="small-label">合約</span><br />
                 <span data-field="contract">-</span>
+              </div>
+              <div>
+                <span class="small-label">成交量</span><br />
+                <span data-field="volume">-</span>
+              </div>
+              <div>
+                <span class="small-label">時間</span><br />
+                <span data-field="time">--:--:--</span>
+              </div>
+            </div>
+            <div class="error" data-field="error"></div>
+          </div>
+        </section>
+
+        <section class="card" data-symbol="US_DJ">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="symbol">MYM</div>
+                <div class="name">小道瓊期貨</div>
+              </div>
+              <span class="tag">CME Micro YM</span>
+            </div>
+            <div class="price-row">
+              <span class="price" data-field="price">-</span>
+              <span class="change" data-field="change">-- (--%)</span>
+            </div>
+            <div class="meta-row">
+              <div>
+                <span class="small-label">合約</span><br />
+                <span data-field="contract">-</span>
+              </div>
+              <div>
+                <span class="small-label">成交量</span><br />
+                <span data-field="volume">-</span>
+              </div>
+              <div>
+                <span class="small-label">時間</span><br />
+                <span data-field="time">--:--:--</span>
+              </div>
+            </div>
+            <div class="error" data-field="error"></div>
+          </div>
+        </section>
+
+        <section class="card" data-symbol="US_VOO">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="symbol">VOO</div>
+                <div class="name">S&P500 ETF (VOO)</div>
+              </div>
+              <span class="tag">美股 ETF</span>
+            </div>
+            <div class="price-row">
+              <span class="price" data-field="price">-</span>
+              <span class="change" data-field="change">-- (--%)</span>
+            </div>
+            <div class="meta-row">
+              <div>
+                <span class="small-label">代號</span><br />
+                <span data-field="contract">VOO</span>
               </div>
               <div>
                 <span class="small-label">成交量</span><br />
@@ -392,14 +454,22 @@
           url: './data/taiex.json',
           parse: (data) => data,
         },
-        // 台指期（全）：對應 data/txf.json（先用假資料也可）
+        // 台指期（全）：對應 data/txf.json
         TXF: {
           url: './data/txf.json',
           parse: (data) => data,
         },
-        // 新加坡富台指：對應 data/sxf.json
-        SXF: {
-          url: './data/sxf.json',
+        // 美股：小那斯、小道瓊、VOO
+        US_NQ: {
+          url: './data/us_nq.json',
+          parse: (data) => data,
+        },
+        US_DJ: {
+          url: './data/us_dj.json',
+          parse: (data) => data,
+        },
+        US_VOO: {
+          url: './data/us_voo.json',
           parse: (data) => data,
         },
       };
@@ -513,7 +583,9 @@
       async function refreshAll() {
         statusText.textContent = '更新中...';
 
-        await Promise.allSettled(['TAIEX', 'TXF', 'SXF'].map(fetchOne));
+        await Promise.allSettled(
+          ['TAIEX', 'TXF', 'US_NQ', 'US_DJ', 'US_VOO'].map(fetchOne)
+        );
 
         const now = new Date();
         lastUpdatedEl.textContent = `上次更新：${now.toLocaleString('zh-TW', {

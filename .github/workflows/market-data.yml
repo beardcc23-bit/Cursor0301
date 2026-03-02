@@ -29,9 +29,9 @@ jobs:
         run: |
           node scripts/fetch-txf.mjs
 
-      - name: Run SXF fetcher
+      - name: Run US market fetcher
         run: |
-          node scripts/fetch-sxf.mjs
+          node scripts/fetch-us.mjs
 
       - name: Commit & push if changed
         run: |
