@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  update-taiex:
+  update-market:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +24,14 @@ jobs:
       - name: Run TAIEX fetcher
         run: |
           node scripts/fetch-taiex.mjs
+
+      - name: Run TXF fetcher
+        run: |
+          node scripts/fetch-txf.mjs
+
+      - name: Run SXF fetcher
+        run: |
+          node scripts/fetch-sxf.mjs
 
       - name: Commit & push if changed
         run: |
