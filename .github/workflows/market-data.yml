@@ -1,0 +1,40 @@
+name: Update market data
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # 每 5 分鐘跑一次
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-taiex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run TAIEX fetcher
+        run: |
+          node scripts/fetch-taiex.mjs
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain data)" ]; then
+            git add data
+            git commit -m "chore: update market data"
+            git push
+          else
+            echo "No changes"
+          fi
+

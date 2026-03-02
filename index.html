@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <title>台股與期貨監控面板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050816;
+        --bg-soft: #0b1020;
+        --bg-softer: #101524;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.12);
+        --danger: #f97373;
+        --text-main: #e5e7eb;
+        --text-sub: #9ca3af;
+        --border-subtle: rgba(156, 163, 175, 0.2);
+        --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.7);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        background: radial-gradient(circle at top, #1f2937 0, #020617 45%, #000 100%);
+        color: var(--text-main);
+      }
+
+      .shell {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .title-block h1 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0.05em;
+      }
+
+      .title-block p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--text-sub);
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-sub);
+      }
+
+      .badge-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
+      }
+
+      select,
+      button {
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-main);
+        font-size: 12px;
+        padding: 6px 10px;
+        outline: none;
+      }
+
+      button {
+        cursor: pointer;
+        border-color: rgba(56, 189, 248, 0.6);
+        background: linear-gradient(135deg, #0f172a, #020617);
+      }
+
+      button:hover {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        body {
+          padding: 16px;
+        }
+      }
+
+      .card {
+        position: relative;
+        padding: 14px 14px 12px;
+        border-radius: 18px;
+        background: radial-gradient(circle at top, #1f2937 0, #020617 55%, #020617 100%);
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        overflow: hidden;
+      }
+
+      .card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at top right,
+          rgba(56, 189, 248, 0.16),
+          transparent 60%
+        );
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .card-inner {
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .symbol {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #9ca3af;
+      }
+
+      .name {
+        font-size: 14px;
+        color: var(--text-main);
+      }
+
+      .tag {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        color: var(--text-sub);
+      }
+
+      .price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+
+      .price {
+        font-size: 24px;
+        font-weight: 600;
+      }
+
+      .change {
+        font-size: 13px;
+      }
+
+      .change.up {
+        color: #4ade80;
+      }
+
+      .change.down {
+        color: #f97373;
+      }
+
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-sub);
+        margin-bottom: 4px;
+      }
+
+      .meta-row span + span {
+        margin-left: 8px;
+      }
+
+      .small-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #6b7280;
+      }
+
+      .error {
+        color: var(--danger);
+        font-size: 11px;
+        margin-top: 4px;
+      }
+
+      .footer {
+        margin-top: 12px;
+        font-size: 10px;
+        color: var(--text-sub);
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <div class="title-block">
+          <h1>台股／期貨監控</h1>
+          <p>台股大盤、台指期（全）、新加坡富台指三檔即時監控（前端示意）</p>
+        </div>
+        <div class="controls">
+          <span class="badge">
+            <span class="badge-dot"></span>
+            <span id="status-text">自動更新中</span>
+          </span>
+          <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-sub);">
+            週期
+            <select id="interval-select">
+              <option value="5">5 秒</option>
+              <option value="10">10 秒</option>
+              <option value="30">30 秒</option>
+              <option value="60">60 秒</option>
+            </select>
+          </label>
+          <button id="refresh-btn">手動更新</button>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="card" data-symbol="TAIEX">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="symbol">TAIEX</div>
+                <div class="name">台股大盤加權指數</div>
+              </div>
+              <span class="tag">現貨</span>
+            </div>
+            <div class="price-row">
+              <span class="price" data-field="price">-</span>
+              <span class="change" data-field="change">-- (--%)</span>
+            </div>
+            <div class="meta-row">
+              <div>
+                <span class="small-label">高 / 低</span><br />
+                <span data-field="highlow">- / -</span>
+              </div>
+              <div>
+                <span class="small-label">成交量</span><br />
+                <span data-field="volume">-</span>
+              </div>
+              <div>
+                <span class="small-label">時間</span><br />
+                <span data-field="time">--:--:--</span>
+              </div>
+            </div>
+            <div class="error" data-field="error"></div>
+          </div>
+        </section>
+
+        <section class="card" data-symbol="TXF">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="symbol">TX</div>
+                <div class="name">台指期（全月連續）</div>
+              </div>
+              <span class="tag">TAIFEX 期貨</span>
+            </div>
+            <div class="price-row">
+              <span class="price" data-field="price">-</span>
+              <span class="change" data-field="change">-- (--%)</span>
+            </div>
+            <div class="meta-row">
+              <div>
+                <span class="small-label">合約</span><br />
+                <span data-field="contract">-</span>
+              </div>
+              <div>
+                <span class="small-label">成交量</span><br />
+                <span data-field="volume">-</span>
+              </div>
+              <div>
+                <span class="small-label">時間</span><br />
+                <span data-field="time">--:--:--</span>
+              </div>
+            </div>
+            <div class="error" data-field="error"></div>
+          </div>
+        </section>
+
+        <section class="card" data-symbol="SXF">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="symbol">SXF</div>
+                <div class="name">新加坡富台指</div>
+              </div>
+              <span class="tag">SGX 期貨</span>
+            </div>
+            <div class="price-row">
+              <span class="price" data-field="price">-</span>
+              <span class="change" data-field="change">-- (--%)</span>
+            </div>
+            <div class="meta-row">
+              <div>
+                <span class="small-label">合約</span><br />
+                <span data-field="contract">-</span>
+              </div>
+              <div>
+                <span class="small-label">成交量</span><br />
+                <span data-field="volume">-</span>
+              </div>
+              <div>
+                <span class="small-label">時間</span><br />
+                <span data-field="time">--:--:--</span>
+              </div>
+            </div>
+            <div class="error" data-field="error"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span id="last-updated">上次更新：--</span>
+        <span>
+          實際行情請以交易端／證期所為準。若資料抓取失敗，多半是 API 或 CORS 權限問題。
+        </span>
+      </footer>
+    </div>
+
+    <script>
+      // 改成吃同 repo 裡的靜態 JSON，不直接碰券商 / vendor API
+      const API_CONFIG = {
+        // 台股大盤：對應 data/taiex.json（由 GitHub Actions 產生）
+        TAIEX: {
+          url: './data/taiex.json',
+          parse: (data) => data,
+        },
+        // 台指期（全）：對應 data/txf.json（先用假資料也可）
+        TXF: {
+          url: './data/txf.json',
+          parse: (data) => data,
+        },
+        // 新加坡富台指：對應 data/sxf.json
+        SXF: {
+          url: './data/sxf.json',
+          parse: (data) => data,
+        },
+      };
+
+      const cards = document.querySelectorAll('.card');
+      const statusText = document.getElementById('status-text');
+      const lastUpdatedEl = document.getElementById('last-updated');
+      const intervalSelect = document.getElementById('interval-select');
+      const refreshBtn = document.getElementById('refresh-btn');
+
+      let timerId = null;
+
+      function formatNumber(value, digits = 2) {
+        if (value === null || value === undefined || Number.isNaN(value)) {
+          return '-';
+        }
+        return Number(value).toLocaleString('en-US', {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        });
+      }
+
+      function formatTime(isoString) {
+        if (!isoString) return '--:--:--';
+        const d = new Date(isoString);
+        if (Number.isNaN(d.getTime())) return '--:--:--';
+        return d.toLocaleTimeString('zh-TW', { hour12: false });
+      }
+
+      function setCardError(card, message) {
+        const errorEl = card.querySelector('[data-field="error"]');
+        if (errorEl) errorEl.textContent = message || '';
+      }
+
+      function setCardChange(card, change, changePercent) {
+        const el = card.querySelector('[data-field="change"]');
+        if (!el) return;
+        el.classList.remove('up', 'down');
+
+        if (change === null || change === undefined) {
+          el.textContent = '-- (--%)';
+          return;
+        }
+
+        const sign = change > 0 ? '+' : change < 0 ? '-' : '';
+        const pctSign = changePercent > 0 ? '+' : changePercent < 0 ? '-' : '';
+
+        el.textContent = `${sign}${formatNumber(Math.abs(change), 2)} (${pctSign}${formatNumber(
+          Math.abs(changePercent),
+          2
+        )}%)`;
+
+        if (change > 0) el.classList.add('up');
+        if (change < 0) el.classList.add('down');
+      }
+
+      function updateCard(symbol, payload) {
+        const card = document.querySelector(`.card[data-symbol="${symbol}"]`);
+        if (!card) return;
+
+        setCardError(card, '');
+
+        const priceEl = card.querySelector('[data-field="price"]');
+        if (priceEl) priceEl.textContent = formatNumber(payload.last, 2);
+
+        setCardChange(card, payload.change, payload.changePercent);
+
+        const timeEl = card.querySelector('[data-field="time"]');
+        if (timeEl) timeEl.textContent = formatTime(payload.time);
+
+        if (symbol === 'TAIEX') {
+          const hlEl = card.querySelector('[data-field="highlow"]');
+          if (hlEl) {
+            hlEl.textContent = `${formatNumber(payload.high, 2)} / ${formatNumber(
+              payload.low,
+              2
+            )}`;
+          }
+        } else {
+          const contractEl = card.querySelector('[data-field="contract"]');
+          if (contractEl && payload.contract) {
+            contractEl.textContent = payload.contract;
+          }
+        }
+
+        const volEl = card.querySelector('[data-field="volume"]');
+        if (volEl && payload.volume != null) {
+          volEl.textContent = formatNumber(payload.volume, 0);
+        }
+      }
+
+      async function fetchOne(symbol) {
+        const config = API_CONFIG[symbol];
+        const card = document.querySelector(`.card[data-symbol="${symbol}"]`);
+        if (!config || !card) return;
+
+        try {
+          const resp = await fetch(config.url, { cache: 'no-store' });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const raw = await resp.json();
+          const parsed = config.parse(raw);
+
+          // 容錯：你可以在這裡再做一次 shape 檢查
+          updateCard(symbol, parsed);
+        } catch (err) {
+          console.error(symbol, 'fetch error', err);
+          setCardError(card, '資料暫時無法取得');
+        }
+      }
+
+      async function refreshAll() {
+        statusText.textContent = '更新中...';
+
+        await Promise.allSettled(['TAIEX', 'TXF', 'SXF'].map(fetchOne));
+
+        const now = new Date();
+        lastUpdatedEl.textContent = `上次更新：${now.toLocaleString('zh-TW', {
+          hour12: false,
+        })}`;
+        statusText.textContent = '自動更新中';
+      }
+
+      function resetTimer() {
+        if (timerId) clearInterval(timerId);
+        const secs = Number(intervalSelect.value || '5');
+        timerId = setInterval(refreshAll, secs * 1000);
+      }
+
+      intervalSelect.addEventListener('change', () => {
+        resetTimer();
+        refreshAll();
+      });
+
+      refreshBtn.addEventListener('click', () => {
+        refreshAll();
+      });
+
+      // init
+      document.addEventListener('DOMContentLoaded', () => {
+        refreshAll();
+        resetTimer();
+      });
+    </script>
+  </body>
+</html>
+
