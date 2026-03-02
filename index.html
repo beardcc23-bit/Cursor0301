@@ -447,7 +447,8 @@
     </div>
 
     <script>
-      // 改成吃同 repo 裡的靜態 JSON，不直接碰券商 / vendor API
+      // 台股走 GitHub Actions 寫好的 JSON
+      // 美股直接前端打 Yahoo Finance 免费 API
       const API_CONFIG = {
         // 台股大盤：對應 data/taiex.json（由 GitHub Actions 產生）
         TAIEX: {
@@ -461,16 +462,55 @@
         },
         // 美股：小那斯、小道瓊、VOO
         US_NQ: {
-          url: './data/us_nq.json',
-          parse: (data) => data,
+          url:
+            'https://query1.finance.yahoo.com/v7/finance/quote?symbols=MNQ=F',
+          parse: (data) => {
+            const q = data.quoteResponse?.result?.[0] || {};
+            return {
+              last: q.regularMarketPrice,
+              change: q.regularMarketChange,
+              changePercent: q.regularMarketChangePercent,
+              contract: q.symbol || 'MNQ=F',
+              volume: q.regularMarketVolume,
+              time: q.regularMarketTime
+                ? new Date(q.regularMarketTime * 1000).toISOString()
+                : null,
+            };
+          },
         },
         US_DJ: {
-          url: './data/us_dj.json',
-          parse: (data) => data,
+          url:
+            'https://query1.finance.yahoo.com/v7/finance/quote?symbols=MYM=F',
+          parse: (data) => {
+            const q = data.quoteResponse?.result?.[0] || {};
+            return {
+              last: q.regularMarketPrice,
+              change: q.regularMarketChange,
+              changePercent: q.regularMarketChangePercent,
+              contract: q.symbol || 'MYM=F',
+              volume: q.regularMarketVolume,
+              time: q.regularMarketTime
+                ? new Date(q.regularMarketTime * 1000).toISOString()
+                : null,
+            };
+          },
         },
         US_VOO: {
-          url: './data/us_voo.json',
-          parse: (data) => data,
+          url:
+            'https://query1.finance.yahoo.com/v7/finance/quote?symbols=VOO',
+          parse: (data) => {
+            const q = data.quoteResponse?.result?.[0] || {};
+            return {
+              last: q.regularMarketPrice,
+              change: q.regularMarketChange,
+              changePercent: q.regularMarketChangePercent,
+              contract: 'VOO',
+              volume: q.regularMarketVolume,
+              time: q.regularMarketTime
+                ? new Date(q.regularMarketTime * 1000).toISOString()
+                : null,
+            };
+          },
         },
       };
 
